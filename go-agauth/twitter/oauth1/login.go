@@ -2,7 +2,6 @@ package oauth1
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/go-agauth/twitter/services"
@@ -44,7 +43,6 @@ func twitterHandler(config *Config, success, failure http.Handler) http.Handler 
 	fn := func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 		accessToken, accessSecret, err := AccessTokenFromContext(ctx)
-		fmt.Println("request token : " + accessToken + " , request secret : " + accessSecret)
 		if err != nil {
 			ctx = WithError(ctx, err)
 			failure.ServeHTTP(w, req.WithContext(ctx))

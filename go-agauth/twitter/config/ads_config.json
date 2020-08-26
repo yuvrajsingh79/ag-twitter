@@ -1,0 +1,10 @@
+{
+  "twitter-ads": [
+    {
+      "ads-url": "https://ads-api.twitter.com/",
+      "api-version": "7",
+      "sandbox-url": "https://ads-api-sandbox.twitter.com/",
+      "sandbox-api-version": "7"
+    }
+  ]
+}

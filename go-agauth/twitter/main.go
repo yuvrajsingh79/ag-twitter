@@ -1,22 +1,25 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/go-agauth/twitter/campaigns"
 	twitterOAuth1 "github.com/go-agauth/twitter/oauth1"
 	"github.com/go-agauth/twitter/sessions"
 	"github.com/go-agauth/twitter/users"
 )
 
 const (
-	sessionName     = "example-twtter-app"
-	sessionSecret   = "example cookie signing secret"
+	sessionName     = "twitter-oauth-session"
+	sessionSecret   = "twitter cookie signing secret"
 	sessionUserKey  = "twitterID"
 	sessionUsername = "twitterUsername"
+	sessionAdCreds  = "twitterCredentials"
 )
 
 // sessionStore encodes and decodes session data stored in signed cookies
@@ -28,9 +31,19 @@ type Config struct {
 	TwitterConsumerSecret string
 }
 
+var adCreds = &campaigns.AdCreds{
+	ConsumerKey:      "",
+	ConsumerSecret:   "",
+	OAuthToken:       "",
+	OAuthTokenSecret: "",
+	OAuthVerifier:    "",
+}
+
 // New returns a new ServeMux with app routes.
 func New(config *Config) *http.ServeMux {
 	mux := http.NewServeMux()
+
+	//authentication begins...
 	mux.HandleFunc("/", profileHandler)
 	mux.HandleFunc("/logout", logoutHandler)
 	// 1. Register Twitter login and callback handlers
@@ -41,12 +54,20 @@ func New(config *Config) *http.ServeMux {
 		Endpoint:       twitterOAuth1.AuthorizeEndpoint,
 	}
 	mux.Handle("/twitter/login", twitterOAuth1.LoginController(oauth1Config, nil))
-	mux.Handle("/twitter/callback", twitterOAuth1.CallbackController(oauth1Config, issueSession(), nil))
+	mux.Handle("/twitter/callback", twitterOAuth1.CallbackController(oauth1Config, issueSession(oauth1Config), nil))
+	//...authentication process completed
+
+	//ads api route handlers
+	fmt.Println("-----------------------****************************--------------------------")
+	// adsConf := adsInit(oauth1Config)
+	// fmt.Println(adsConf)
+	// mux.Handle("/twitter/ads/accounts")
+
 	return mux
 }
 
 // issueSession issues a cookie session after successful Twitter login
-func issueSession() http.Handler {
+func issueSession(config *twitterOAuth1.Config) http.Handler {
 	fn := func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 		twitterUser, err := users.UserFromContext(ctx)
@@ -54,10 +75,25 @@ func issueSession() http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		accessToken, accessSecret, err := twitterOAuth1.AccessTokenFromContext(ctx)
+		_, verifier, err := twitterOAuth1.ParseAuthorizationCallback(req)
+		adCreds = &campaigns.AdCreds{
+			ConsumerKey:      config.ConsumerKey,
+			ConsumerSecret:   config.ConsumerSecret,
+			OAuthToken:       accessToken,
+			OAuthTokenSecret: accessSecret,
+			OAuthVerifier:    verifier,
+		}
+
+		fmt.Println("-----------------------****************************--------------------------")
+		fmt.Println(adCreds)
+
 		// 2. Implement a success handler to issue some form of session
 		session := sessionStore.New(sessionName)
 		session.Values[sessionUserKey] = twitterUser.ID
 		session.Values[sessionUsername] = twitterUser.ScreenName
+		session.Values[sessionAdCreds] = adCreds
 		session.Save(w)
 		http.Redirect(w, req, "/profile", http.StatusFound)
 	}
@@ -94,20 +130,24 @@ func main() {
 		TwitterConsumerSecret: os.Getenv("TWITTER_CONSUMER_SECRET"),
 	}
 	// allow consumer credential flags to override config fields
-	// consumerKey := flag.String("consumer-key", "", "Twitter Consumer Key")
-	// consumerSecret := flag.String("consumer-secret", "", "Twitter Consumer Secret")
-	consumerKey := "eaGx1xxDSGm3Mvng42VvRuJRT"
-	consumerSecret := "YDV0B453ckaWU5yyYBBHIG0SzZMoeRVqaEgGjB0ZRVYWtalJwI"
-	// flag.Parse()
-	// if *consumerKey != "" {
-	config.TwitterConsumerKey = consumerKey
-	// }
-	// if *consumerSecret != "" {
-	config.TwitterConsumerSecret = consumerSecret
-	// }
+	consumerKey := flag.String("consumer-key", "", "Twitter Consumer Key")
+	consumerSecret := flag.String("consumer-secret", "", "Twitter Consumer Secret")
+	// consumerKey := "eaGx1xxDSGm3Mvng42VvRuJRT"
+	// consumerSecret := "YDV0B453ckaWU5yyYBBHIG0SzZMoeRVqaEgGjB0ZRVYWtalJwI"
+	flag.Parse()
+
+	if *consumerKey != "" {
+		config.TwitterConsumerKey = *consumerKey
+	}
+
+	if *consumerSecret != "" {
+		config.TwitterConsumerSecret = *consumerSecret
+	}
+
 	if config.TwitterConsumerKey == "" {
 		log.Fatal("Missing Twitter Consumer Key")
 	}
+
 	if config.TwitterConsumerSecret == "" {
 		log.Fatal("Missing Twitter Consumer Secret")
 	}
