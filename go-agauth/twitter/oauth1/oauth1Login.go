@@ -1,7 +1,6 @@
 package oauth1
 
 import (
-	"log"
 	"net/http"
 )
 
@@ -23,7 +22,7 @@ func LoginHandler(config *Config, success, failure http.Handler) http.Handler {
 			failure.ServeHTTP(w, req.WithContext(ctx))
 			return
 		}
-		log.Println("request token : " + requestToken + " , request secret : " + requestSecret)
+		// log.Println("request token : " + requestToken + " , request secret : " + requestSecret)
 		ctx = WithRequestToken(ctx, requestToken, requestSecret)
 		success.ServeHTTP(w, req.WithContext(ctx))
 	}
