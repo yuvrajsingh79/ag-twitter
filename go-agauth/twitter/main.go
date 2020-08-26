@@ -15,11 +15,15 @@ import (
 )
 
 const (
-	sessionName     = "twitter-oauth-session"
-	sessionSecret   = "twitter cookie signing secret"
-	sessionUserKey  = "twitterID"
-	sessionUsername = "twitterUsername"
-	sessionAdCreds  = "twitterCredentials"
+	sessionName      = "twitter-oauth-session"
+	sessionSecret    = "twitter cookie signing secret"
+	sessionUserKey   = "twitterID"
+	sessionUsername  = "twitterUsername"
+	sessionConKey    = "ConsumerKey"
+	sessionConSecret = "ConsumerSecret"
+	sessionOToken    = "OAuthToken"
+	sessionOSecret   = "OAuthSecret"
+	sessionVerifier  = "OAuthVerifier"
 )
 
 // sessionStore encodes and decodes session data stored in signed cookies
@@ -59,9 +63,7 @@ func New(config *Config) *http.ServeMux {
 
 	//ads api route handlers
 	fmt.Println("-----------------------****************************--------------------------")
-	// adsConf := adsInit(oauth1Config)
-	// fmt.Println(adsConf)
-	// mux.Handle("/twitter/ads/accounts")
+	mux.Handle("/twitter/ads/accounts", campaigns.AddNewAccount())
 
 	return mux
 }
@@ -86,14 +88,18 @@ func issueSession(config *twitterOAuth1.Config) http.Handler {
 			OAuthVerifier:    verifier,
 		}
 
-		fmt.Println("-----------------------****************************--------------------------")
-		fmt.Println(adCreds)
+		// fmt.Println("-----------------------****************************--------------------------")
+		// fmt.Println(adCreds)
 
 		// 2. Implement a success handler to issue some form of session
 		session := sessionStore.New(sessionName)
 		session.Values[sessionUserKey] = twitterUser.ID
 		session.Values[sessionUsername] = twitterUser.ScreenName
-		session.Values[sessionAdCreds] = adCreds
+		session.Values[sessionConKey] = adCreds.ConsumerKey
+		session.Values[sessionConSecret] = adCreds.ConsumerSecret
+		session.Values[sessionOToken] = adCreds.OAuthToken
+		session.Values[sessionOSecret] = adCreds.OAuthTokenSecret
+		session.Values[sessionVerifier] = adCreds.OAuthVerifier
 		session.Save(w)
 		http.Redirect(w, req, "/profile", http.StatusFound)
 	}

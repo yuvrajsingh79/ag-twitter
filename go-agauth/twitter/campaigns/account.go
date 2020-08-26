@@ -8,9 +8,13 @@ import (
 )
 
 const (
-	sessionAdCreds = "twitterCredentials"
-	sessionName    = "twitter-oauth-session"
-	sessionSecret  = "twitter cookie signing secret"
+	sessionName      = "twitter-oauth-session"
+	sessionSecret    = "twitter cookie signing secret"
+	sessionConKey    = "ConsumerKey"
+	sessionConSecret = "ConsumerSecret"
+	sessionOToken    = "OAuthToken"
+	sessionOSecret   = "OAuthSecret"
+	sessionVerifier  = "OAuthVerifier"
 )
 
 // sessionStore encodes and decodes session data stored in signed cookies
@@ -24,7 +28,7 @@ func AddNewAccount() http.Handler {
 		if err != nil {
 			log.Println("err")
 		}
-		log.Println(session.Values[sessionAdCreds])
+		log.Println(session.Values[sessionConKey], " ", session.Values[sessionConSecret], " ", session.Values[sessionOToken], " ", session.Values[sessionOSecret], " ", session.Values[sessionVerifier])
 	}
 	return http.HandlerFunc(fn)
 }
