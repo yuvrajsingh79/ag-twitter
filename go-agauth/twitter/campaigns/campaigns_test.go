@@ -1,0 +1,31 @@
+package campaigns
+
+import (
+	"testing"
+)
+
+func Test_getAccount(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			getAccount()
+		})
+	}
+}
+
+func Test_getAccountById(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			getAccountById()
+		})
+	}
+}

@@ -6,4 +6,5 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/google/go-querystring v1.0.0
 	github.com/gorilla/securecookie v1.1.1
+	github.com/stretchr/testify v1.6.1
 )
